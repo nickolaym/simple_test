@@ -146,7 +146,39 @@ inline int testing_main(int argc, char** argv) {
   return !simple_test::TestCase::run_all();
 }
 
+// comparisons
+
+template<char... cs> struct op_tag_type {};
+
+template<class C, C... cs> constexpr op_tag_type<cs...> operator ""_op_tag() { return {}; }
+
+template<class TAG> struct tagged_cmp;
+
+#define TAGGED_CMP(op) tagged_cmp<decltype(#op ## _op_tag)>
+
+#define DECLARE_TAGGED_CMP(op) \
+template<> struct TAGGED_CMP(op) { \
+  constexpr auto operator()(const auto& a, const auto& b) const { return a op b; } \
+};
+
+DECLARE_TAGGED_CMP(==)
+DECLARE_TAGGED_CMP(!=)
+DECLARE_TAGGED_CMP(<)
+DECLARE_TAGGED_CMP(>)
+DECLARE_TAGGED_CMP(<=)
+DECLARE_TAGGED_CMP(>=)
+
+template<class TAG> struct tagged_strcmp {
+  constexpr auto operator()(const auto& a, const auto& b) const {
+    return tagged_cmp<TAG>()(strcmp(a, b), 0);
+  }
+};
+
+#define TAGGED_STRCMP(op) tagged_strcmp<decltype(#op ## _op_tag)>
+
 }  // namespace simple_test
+
+using simple_test::operator ""_op_tag;
 
 #define TEST(name, ...) \
     void func_##name(); \
@@ -157,20 +189,17 @@ inline int testing_main(int argc, char** argv) {
     simple_test::expect_comparison(__FILE__, __LINE__, #a, a, #b, b, assertion, ##__VA_ARGS__)
 
 #define EXAMINE_CMP(a, op, b, assertion) \
-    EXAMINE(a, b, assertion, \
-        [](const auto& x, const auto& y) { return x op y; }, #op)
+    EXAMINE(a, b, assertion, simple_test::TAGGED_CMP(op)(), #op)
 #define ASSERT_CMP(a, op, b) EXAMINE_CMP(a, op, b, true)
 #define EXPECT_CMP(a, op, b) EXAMINE_CMP(a, op, b, false)
 
 #define EXAMINE_STRCMP(a, op, b, assertion) \
-    EXAMINE(a, b, assertion, \
-        [](const auto& x, const auto& y) { return strcmp(x, y) op 0; }, "[strcmp]" #op)
+    EXAMINE(a, b, assertion, simple_test::TAGGED_STRCMP(op)(), "[strcmp]" #op)
 #define ASSERT_STRCMP(a, op, b) EXAMINE_STRCMP(a, op, b, true)
 #define EXPECT_STRCMP(a, op, b) EXAMINE_STRCMP(a, op, b, false)
 
 #define EXAMINE_BOOL(a, b, assertion) \
-    EXAMINE(a, b, assertion, \
-        [](const auto& x, const auto& y) { return (bool)a == (bool)b; }, "is")
+    EXAMINE(a, b, assertion, std::equal_to<bool>(), "is")
 #define ASSERT_BOOL(a, b) EXAMINE_BOOL(a, b, true)
 #define EXPECT_BOOL(a, b) EXAMINE_BOOL(a, b, false)
 

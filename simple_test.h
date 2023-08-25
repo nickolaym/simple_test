@@ -176,6 +176,39 @@ template<class TAG> struct tagged_strcmp {
 
 #define TAGGED_STRCMP(op) tagged_strcmp<decltype(#op ## _op_tag)>
 
+// float comparison
+
+template<class FLOAT> struct nearly_float {
+  FLOAT value, epsilon;
+  // this == x means x belongs to the neighourhood
+  constexpr bool operator == (FLOAT x) const { return value-epsilon <= x && x <= value+epsilon; }
+  constexpr bool operator != (FLOAT x) const { return !(*this == x); }
+  // this < x means x is strictly greater than the upper bound
+  constexpr bool operator <  (FLOAT x) const { return value+epsilon < x; }
+  constexpr bool operator >  (FLOAT x) const { return x < value-epsilon; }
+  // this <= x means x is greater-or-equal than the lower bound
+  constexpr bool operator <= (FLOAT x) const { return value-epsilon <= x; }
+  constexpr bool operator >= (FLOAT x) const { return x <= value+epsilon; }
+
+  friend constexpr bool operator == (FLOAT x, const nearly_float& y) { return y == x; }
+  friend constexpr bool operator != (FLOAT x, const nearly_float& y) { return y != x; }
+  friend constexpr bool operator <  (FLOAT x, const nearly_float& y) { return y >  x; }
+  friend constexpr bool operator >  (FLOAT x, const nearly_float& y) { return y <  x; }
+  friend constexpr bool operator <= (FLOAT x, const nearly_float& y) { return y >= x; }
+  friend constexpr bool operator >= (FLOAT x, const nearly_float& y) { return y <= x; }
+
+  friend std::ostream& operator << (std::ostream& ost, const nearly_float& f) {
+    return ost << f.value << " ± " << f.epsilon;
+  }
+};
+
+template<class FLOAT, class EPS> constexpr auto nearly_abs(FLOAT v, EPS eps) {
+  return nearly_float<FLOAT>{v, static_cast<FLOAT>(std::abs(eps))};
+}
+template<class FLOAT, class EPS> constexpr auto nearly_rel(FLOAT v, EPS eps) {
+  return nearly_abs(v, v * eps);
+}
+
 }  // namespace simple_test
 
 using simple_test::operator ""_op_tag;

@@ -72,4 +72,13 @@ TEST(do_not_make_dangling_references) {
   EXPECT_CMP(d, !=, 456);
 }
 
+TEST(compare_floats) {
+  EXPECT_CMP(123.456, ==, simple_test::nearly_abs(123.4, 0.1));
+  EXPECT_CMP(123.456, ==, simple_test::nearly_abs(123.5, 0.1));
+  EXPECT_CMP(123.456, <, simple_test::nearly_abs(123.6, 0.1));
+  EXPECT_CMP(123.456, >, simple_test::nearly_abs(123.3, 0.1));
+  EXPECT_CMP(123.456, <=, simple_test::nearly_abs(123.4, 0.1));
+  EXPECT_CMP(123.456, >=, simple_test::nearly_abs(123.5, 0.1));
+}
+
 TESTING_MAIN()

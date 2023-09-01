@@ -213,10 +213,12 @@ template<class FLOAT, class EPS> constexpr auto nearly_rel(FLOAT v, EPS eps) {
 
 using simple_test::operator ""_op_tag;
 
-#define TEST(name, ...) \
-    void func_##name(); \
-    simple_test::TestCase test_##name(#name, func_##name ,##__VA_ARGS__); \
-    void func_##name() /* test body goes here */
+#define TEST(suite, name, ...) \
+    void _test__##suite##__##name##__func(); \
+    simple_test::TestCase _test__##suite##__##name##__var( \
+        #suite "::" #name, \
+        _test__##suite##__##name##__func ,##__VA_ARGS__); \
+    void _test__##suite##__##name##__func() /* test body goes here */
 
 #define EXAMINE(a, b, assertion, ...) \
     simple_test::expect_comparison(__FILE__, __LINE__, #a, a, #b, b, assertion, ##__VA_ARGS__)

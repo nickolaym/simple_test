@@ -1,7 +1,16 @@
 #include "simple_test.h"
 #include <cassert>
 
-TEST(lots_of_failed_expectations) {
+#include <vector>
+
+TEST(simple_test, vector_capacity) {
+  std::vector<int> xs;
+  xs.reserve(100500);
+  xs.clear();
+  EXPECT_CMP(xs.capacity(), ==, 0);
+}
+
+TEST(simple_test, lots_of_failed_expectations) {
   EXPECT_CMP(123, ==, 456);
   EXPECT_BOOL(true, false);
   EXPECT_STRCMP("hello", >, "world");
@@ -9,31 +18,31 @@ TEST(lots_of_failed_expectations) {
   std::cout << "some went wrong (or not...)" << std::endl;
 }
 
-TEST(some_assertion_failed) {
+TEST(simple_test, some_assertion_failed) {
   ASSERT_CMP(123, ==, 456);
   assert(false);  // unreachable
 }
 
-TEST(raised_exception) {
+TEST(simple_test, raised_exception) {
   throw std::runtime_error("ooo");
   assert(false);  // unreachable
 }
 
-TEST(some_disabled, false) {
+TEST(simple_test, some_disabled, false) {
   assert(false);  // unreachable
 }
 
-TEST(some_fault_1) {
+TEST(simple_test, some_fault_1) {
   ASSERTION_FAULT();
   assert(false);  // unreachable
 }
 
-TEST(some_fault_2) {
+TEST(simple_test, some_fault_2) {
   ASSERTION_FAULT("comment ", 123, " goes here");
   assert(false);  // unreachable
 }
 
-TEST(some_correct) {
+TEST(simple_test, some_correct) {
   const char h1[] = "hello";
   const char h2[] = "hello";
   EXPECT_CMP(h1, !=, h2);  // different addresses
@@ -46,7 +55,7 @@ TEST(some_correct) {
   std::cout << "all right!" << std::endl;
 }
 
-TEST(do_not_eval_twice) {
+TEST(simple_test, do_not_eval_twice) {
   int counter = 0;
   ASSERT_CMP(counter++, ==, 0);
   ASSERT_CMP(++counter, ==, 2);
@@ -65,14 +74,14 @@ struct D {
 };
 int D::g_x = D::TRASH;
 
-TEST(do_not_make_dangling_references) {
+TEST(simple_test, do_not_make_dangling_references) {
   EXPECT_CMP(D(123).cref(), ==, 123);
 
   const int& d = D(456).cref();
   EXPECT_CMP(d, !=, 456);
 }
 
-TEST(compare_floats) {
+TEST(simple_test, compare_floats) {
   EXPECT_CMP(123.456, ==, simple_test::nearly_abs(123.4, 0.1));
   EXPECT_CMP(123.456, ==, simple_test::nearly_abs(123.5, 0.1));
   EXPECT_CMP(123.456, <, simple_test::nearly_abs(123.6, 0.1));

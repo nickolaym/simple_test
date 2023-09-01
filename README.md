@@ -5,7 +5,7 @@ simple unittest
 
 - add `simple_test.h` to your project
 - include
-- write set of `TEST(name) {body}` functions
+- write set of `TEST(suite, name) {body}` functions
 - add `TESTING_MAIN()`
 - voila
 
@@ -13,10 +13,11 @@ simple unittest
 
 ### TEST
 ```
-TEST(name, [enabled]) {
+TEST(suite, name, [enabled]) {
   test body goes here;
 }
 ```
+- `suite` is valid C identifier (not decorated)
 - `name` is valid C identifier (not decorated)
 - `enabled` is optional bool expression (runtime constant, evaluated before main())
 

@@ -39,6 +39,9 @@ EXPECT_CMP(a, op, b)
 ASSERT_STRCMP(a, op, b)
 EXPECT_STRCMP(a, op, b)
 
+ASSERT_FLOATCMP(a, op, b, eps)
+EXPECT_FLOATCMP(a, op, b, eps)
+
 ASSERT_BOOL(a, b)
 EXPECT_BOOL(a, b)
 ```
@@ -47,6 +50,7 @@ EXPECT_BOOL(a, b)
 
 - `_CMP` compares a and b directly, `a op b`, so they should be comparable
 - `_STRCMP` uses C string comparison `strcmp(a, b) op 0`
+- `_FLOATCMP` uses inaccurate float comparison, `(a ± eps) op b`
 - `_BOOL` matches boolean `(bool)a == (bool)b`
 
 So, GTest's `ASSERT_TRUE(a)` is our `ASSERT_BOOL(a, true)` or `ASSERT_BOOL(true, a)`
@@ -68,7 +72,5 @@ int main(int argc, char** argv) {
 ```
 
 ### TODO:
-- inaccurate comparison of float point
 - test throwing / nothrowing exceptions
 - printing nonprintable values using some stubs
-- speed up compiling, less lambdas.

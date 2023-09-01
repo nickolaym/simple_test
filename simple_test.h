@@ -209,6 +209,15 @@ template<class FLOAT, class EPS> constexpr auto nearly_rel(FLOAT v, EPS eps) {
   return nearly_abs(v, v * eps);
 }
 
+template<class TAG, class EPS> struct tagged_floatcmp_factory {
+  EPS eps;
+  constexpr auto operator()(const auto& a, const auto& b) const {
+    return tagged_cmp<TAG>()(nearly_abs(a, eps), b);
+  }
+};
+
+#define TAGGED_FLOATCMP(op, eps) tagged_floatcmp<decltype(#op ## _op_tag), decltype(eps)>{eps}
+
 }  // namespace simple_test
 
 using simple_test::operator ""_op_tag;
@@ -220,8 +229,10 @@ using simple_test::operator ""_op_tag;
         _test__##suite##__##name##__func ,##__VA_ARGS__); \
     void _test__##suite##__##name##__func() /* test body goes here */
 
+#define EXAMINE_IMPL(ae, a, be, b, assertion, ...) \
+    simple_test::expect_comparison(__FILE__, __LINE__, ae, a, be, b, assertion, ##__VA_ARGS__)
 #define EXAMINE(a, b, assertion, ...) \
-    simple_test::expect_comparison(__FILE__, __LINE__, #a, a, #b, b, assertion, ##__VA_ARGS__)
+    EXAMINE_IMPL(#a, a, #b, b, assertion, ##__VA_ARGS__)
 
 #define EXAMINE_CMP(a, op, b, assertion) \
     EXAMINE(a, b, assertion, simple_test::TAGGED_CMP(op)(), #op)
@@ -237,6 +248,11 @@ using simple_test::operator ""_op_tag;
     EXAMINE(a, b, assertion, std::equal_to<bool>(), "is")
 #define ASSERT_BOOL(a, b) EXAMINE_BOOL(a, b, true)
 #define EXPECT_BOOL(a, b) EXAMINE_BOOL(a, b, false)
+
+#define EXAMINE_FLOATCMP(a, op, b, eps, assertion) \
+    EXAMINE_IMPL(#a, simple_test::nearly_abs(a, eps), #b, b, assertion, simple_test::TAGGED_CMP(op)(), "[near]" #op)
+#define ASSERT_FLOATCMP(a, op, b, eps) EXAMINE_FLOATCMP(a, op, b, eps, true)
+#define EXPECT_FLOATCMP(a, op, b, eps) EXAMINE_FLOATCMP(a, op, b, eps, false)
 
 #define ASSERTION_FAULT(...) simple_test::examine_fault(__FILE__, __LINE__, ##__VA_ARGS__)
 

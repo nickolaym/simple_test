@@ -81,13 +81,33 @@ TEST(simple_test, do_not_make_dangling_references) {
   EXPECT_CMP(d, !=, 456);
 }
 
-TEST(simple_test, compare_floats) {
+TEST(simple_test, compare_floats_explicitly) {
   EXPECT_CMP(123.456, ==, simple_test::nearly_abs(123.4, 0.1));
   EXPECT_CMP(123.456, ==, simple_test::nearly_abs(123.5, 0.1));
+
   EXPECT_CMP(123.456, <, simple_test::nearly_abs(123.6, 0.1));
   EXPECT_CMP(123.456, >, simple_test::nearly_abs(123.3, 0.1));
+
   EXPECT_CMP(123.456, <=, simple_test::nearly_abs(123.4, 0.1));
   EXPECT_CMP(123.456, >=, simple_test::nearly_abs(123.5, 0.1));
+}
+
+TEST(simple_test, compare_floats_implicitly) {
+  const auto pivot = 123.4;
+  const auto epsilon = 0.1;
+  const auto tiny = 0.001;
+
+  EXPECT_FLOATCMP(pivot, ==, pivot - epsilon, epsilon);
+  EXPECT_FLOATCMP(pivot, ==, pivot + epsilon, epsilon);
+
+  EXPECT_FLOATCMP(pivot, !=, pivot - epsilon - tiny, epsilon);
+  EXPECT_FLOATCMP(pivot, !=, pivot + epsilon + tiny, epsilon);
+
+  EXPECT_FLOATCMP(pivot, >, pivot - epsilon - tiny, epsilon);
+  EXPECT_FLOATCMP(pivot, <, pivot + epsilon + tiny, epsilon);
+
+  EXPECT_FLOATCMP(pivot, <=, pivot - epsilon, epsilon);
+  EXPECT_FLOATCMP(pivot, >=, pivot + epsilon, epsilon);
 }
 
 TESTING_MAIN()

@@ -110,4 +110,12 @@ TEST(simple_test, compare_floats_implicitly) {
   EXPECT_FLOATCMP(pivot, >=, pivot + epsilon, epsilon);
 }
 
+TEST(gtest_like, variety) {
+  EXPECT_EQ(123, 123);
+  EXPECT_STREQ("aaa\0bbb", "aaa\0ccc");
+  EXPECT_TRUE(1 == 1);
+  EXPECT_FALSE(1 == 2);
+  EXPECT_NEAR(123.4, 123.5, 0.1);
+}
+
 TESTING_MAIN()

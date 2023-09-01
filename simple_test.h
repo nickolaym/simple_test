@@ -258,3 +258,31 @@ using simple_test::operator ""_op_tag;
 
 #define TESTING_MAIN() \
     int main(int argc, char** argv) { return simple_test::testing_main(argc, argv); }
+
+// GTest-like comparisons
+
+#define ASSERT_EQ(a, b) ASSERT_CMP(a, ==, b)
+#define ASSERT_NE(a, b) ASSERT_CMP(a, !=, b)
+#define ASSERT_LT(a, b) ASSERT_CMP(a, <, b)
+#define ASSERT_GT(a, b) ASSERT_CMP(a, >, b)
+#define ASSERT_LE(a, b) ASSERT_CMP(a, <=, b)
+#define ASSERT_GE(a, b) ASSERT_CMP(a, >=, b)
+#define EXPECT_EQ(a, b) EXPECT_CMP(a, ==, b)
+#define EXPECT_NE(a, b) EXPECT_CMP(a, !=, b)
+#define EXPECT_LT(a, b) EXPECT_CMP(a, <, b)
+#define EXPECT_GT(a, b) EXPECT_CMP(a, >, b)
+#define EXPECT_LE(a, b) EXPECT_CMP(a, <=, b)
+#define EXPECT_GE(a, b) EXPECT_CMP(a, >=, b)
+
+#define ASSERT_STREQ(a, b) ASSERT_STRCMP(a, ==, b)
+#define ASSERT_STRNE(a, b) ASSERT_STRCMP(a, !=, b)
+#define EXPECT_STREQ(a, b) EXPECT_STRCMP(a, ==, b)
+#define EXPECT_STRNE(a, b) EXPECT_STRCMP(a, !=, b)
+
+#define ASSERT_TRUE(a)  ASSERT_BOOL(true, a)
+#define ASSERT_FALSE(a) ASSERT_BOOL(false, a)
+#define EXPECT_TRUE(a)  EXPECT_BOOL(true, a)
+#define EXPECT_FALSE(a) EXPECT_BOOL(false, a)
+
+#define ASSERT_NEAR(a, b, eps) ASSERT_FLOATCMP(a, ==, b, eps)
+#define EXPECT_NEAR(a, b, eps) EXPECT_FLOATCMP(a, ==, b, eps)

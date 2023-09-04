@@ -16,12 +16,26 @@ static const char* yellow = "\x1b[33m";
 static const char* blue = "\x1b[34m";
 static const char* normal = "\x1b[0m";
 
+struct colored_cout_line {
+  static bool is_colored() {
+    static const bool tty = (isatty(fileno(stdout)));
+    return tty;
+  }
+
+  explicit colored_cout_line(const char* color) {
+    if (is_colored()) std::cout << color;
+  }
+  colored_cout_line(colored_cout_line const&) = delete;
+  ~colored_cout_line() {
+    if (is_colored()) std::cout << normal;
+    std::cout << std::endl;
+  }
+
+  std::ostream& ost() const { return std::cout; }
+};
+
 inline void print(const char* color, auto&& ... args) {
-  bool tty = (isatty(fileno(stdout)));
-  if (tty) std::cout << color;
-  ((std::cout << FORWARD(args)) , ...);
-  if (tty) std::cout << normal;
-  std::cout << std::endl;
+  (colored_cout_line(color).ost() << ... << FORWARD(args));
 }
 
 }  // namespace simple_print
@@ -134,6 +148,11 @@ inline void test_failed(bool assertion) {
   if (assertion) throw assertion_fault{};
 }
 
+struct make_test_failed {
+  bool assertion;
+  void operator <<= (auto&& _) && { test_failed(assertion); }
+};
+
 // testing functions
 inline bool expect_comparison(
     const char* file, int line,
@@ -150,9 +169,7 @@ inline bool expect_comparison(
   simple_print::print(color, "    left : ", std::boolalpha, a);
   simple_print::print(color, "    right: ", std::boolalpha, b);
   simple_print::print(color);
-  if (passed) return true;
-  test_failed(assertion);
-  return false;
+  return passed;
 }
 
 inline bool examine_fault(const char* file, int line, auto&& ... comments) {
@@ -161,7 +178,6 @@ inline bool examine_fault(const char* file, int line, auto&& ... comments) {
   if constexpr (sizeof...(comments) > 0) {
     simple_print::print(simple_print::red, "    ", FORWARD(comments)...);
   }
-  test_failed(true);
   return false;
 }
 
@@ -252,8 +268,13 @@ using simple_test::operator ""_op_tag;
         _test__##suite##__##name##__func ,##__VA_ARGS__); \
     void _test__##suite##__##name##__func() /* test body goes here */
 
+#define FAILURE_SUFFIX(assertion) \
+    simple_test::make_test_failed{assertion} <<= \
+    simple_print::colored_cout_line(assertion ? simple_print::red : simple_print::yellow).ost()
+
 #define EXAMINE_IMPL(ae, a, be, b, assertion, ...) \
-    simple_test::expect_comparison(__FILE__, __LINE__, ae, a, be, b, assertion, ##__VA_ARGS__)
+    if (simple_test::expect_comparison(__FILE__, __LINE__, ae, a, be, b, assertion, ##__VA_ARGS__)) ; \
+    else FAILURE_SUFFIX(assertion)
 #define EXAMINE(a, b, assertion, ...) \
     EXAMINE_IMPL(#a, a, #b, b, assertion, ##__VA_ARGS__)
 
@@ -277,7 +298,9 @@ using simple_test::operator ""_op_tag;
 #define ASSERT_FLOATCMP(a, op, b, eps) EXAMINE_FLOATCMP(a, op, b, eps, true)
 #define EXPECT_FLOATCMP(a, op, b, eps) EXAMINE_FLOATCMP(a, op, b, eps, false)
 
-#define ASSERTION_FAULT(...) simple_test::examine_fault(__FILE__, __LINE__, ##__VA_ARGS__)
+#define ASSERTION_FAULT(...) \
+    if (simple_test::examine_fault(__FILE__, __LINE__, ##__VA_ARGS__)) ; \
+    else FAILURE_SUFFIX(true)
 
 #define TESTING_MAIN() \
     int main(int argc, char** argv) { return simple_test::testing_main(argc, argv); }

@@ -7,7 +7,8 @@ TEST(simple_test, vector_capacity) {
   std::vector<int> xs;
   xs.reserve(100500);
   xs.clear();
-  EXPECT_CMP(xs.capacity(), ==, 0);
+  EXPECT_CMP(xs.capacity(), ==, 0) << " ahaha ? ahaha!";
+  ASSERT_CMP(xs.size(), ==, 1) << " ahaha ? ahaha!";
 }
 
 TEST(simple_test, lots_of_failed_expectations) {
@@ -33,7 +34,7 @@ TEST(simple_test, some_disabled, false) {
 }
 
 TEST(simple_test, some_fault_1) {
-  ASSERTION_FAULT();
+  ASSERTION_FAULT() << "comment " << 123 << " goes here";
   assert(false);  // unreachable
 }
 

@@ -33,6 +33,8 @@ which shall throw an exception if some test assertion fails.
 
 Please don't catch(...) inside it without special need.
 
+GTest compatibility: if suite or name starts with `DISABLED`, the test will skip.
+
 ### ASSERT_..., EXPECT_...
 ```
 ASSERT_CMP(a, op, b)
@@ -65,6 +67,18 @@ So, GTest's `ASSERT_TRUE(a)` is our `ASSERT_BOOL(a, true)` or `ASSERT_BOOL(true,
 
 If a comparison failed, compared values are printed `std::cout << a`.
 So, they should be printable.
+
+### Extra output
+
+To print extra messages if an assetion fails, use following syntax:
+
+```
+ASSERT_BLABLABLA() << common << C++ << stream << args;
+
+ASSERTION_FAULT(common, C++, stream, args);
+```
+
+Note that if the assertion passes, nothing will evaluate.
 
 ### TESTING_MAIN
 Just implementation of `int main()`

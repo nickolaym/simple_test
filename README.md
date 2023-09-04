@@ -1,5 +1,7 @@
 # simple_test
-simple unittest
+simple unittest (GTest-like)
+
+Original repository: https://github.com/nickolaym/simple_test
 
 ## Usage
 
@@ -35,19 +37,25 @@ Please don't catch(...) inside it without special need.
 ```
 ASSERT_CMP(a, op, b)
 EXPECT_CMP(a, op, b)
+ASSERT_EQ, ASSERT_LT, ASSERT_LE, ... as in GTest
 
 ASSERT_STRCMP(a, op, b)
 EXPECT_STRCMP(a, op, b)
+ASSERT_STREQ, ASSERT_STRNE, ... as in GTest
 
 ASSERT_FLOATCMP(a, op, b, eps)
 EXPECT_FLOATCMP(a, op, b, eps)
+ASSERT_NEAR, EXPECT_NEAR as in GTest
 
 ASSERT_BOOL(a, b)
 EXPECT_BOOL(a, b)
+ASSERT_TRUE, ASSERT_FALSE, ... as in GTest
 ```
+where args
 - `a`, `b` - arbitrary expressions
 - `op` - arbitrary comparison operator (except `<=>`)
 
+macro suffices
 - `_CMP` compares a and b directly, `a op b`, so they should be comparable
 - `_STRCMP` uses C string comparison `strcmp(a, b) op 0`
 - `_FLOATCMP` uses inaccurate float comparison, `(a ± eps) op b`

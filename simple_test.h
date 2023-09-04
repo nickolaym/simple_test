@@ -38,6 +38,7 @@ struct TestCase {
 
   // chain
   TestCase* m_next = nullptr;
+  const char* m_suite;
   const char* m_name;
   void (*m_func)();
   bool m_enabled;
@@ -46,10 +47,17 @@ struct TestCase {
   bool m_called = false;
   bool m_passed = false;
 
-  TestCase(const char* name, void(*func)(), bool enabled = true)
-    : m_name(name)
+  static bool is_name_disabled(const char* name) {
+    static const char kDisabled[] = "DISABLED";
+    static const size_t nDisabled = strlen(kDisabled);
+    return strncmp(name, kDisabled, nDisabled) == 0;
+  }
+
+  TestCase(const char* suite, const char* name, void(*func)(), bool enabled = true)
+    : m_suite(suite)
+    , m_name(name)
     , m_func(func)
-    , m_enabled(enabled)
+    , m_enabled(enabled && !is_name_disabled(suite) && !is_name_disabled(name))
   {
     if (first()) {
       last() = last()->m_next = this;
@@ -68,7 +76,8 @@ struct TestCase {
 
       current() = t;
 
-      simple_print::print(simple_print::blue, t->m_name, " running...");
+      simple_print::print(simple_print::blue, t->m_suite, "::", t->m_name,
+          " running...");
       simple_print::print(simple_print::blue, simple_print::bar);
       try {
         t->m_passed = true;  // could be reset in the func
@@ -77,20 +86,24 @@ struct TestCase {
         t->m_passed = false;
       } catch (const std::exception& e) {
         t->m_passed = false;
-        simple_print::print(simple_print::red, t->m_name, " raised an exception ", e.what());
+        simple_print::print(simple_print::red, t->m_suite, "::", t->m_name,
+            " raised an exception ", e.what());
       } catch (...) {
         t->m_passed = false;
-        simple_print::print(simple_print::red, t->m_name, " raised an exception");
+        simple_print::print(simple_print::red, t->m_suite, "::", t->m_name,
+            " raised an exception");
       }
 
       if (t->m_passed) {
         num_passed++;
         simple_print::print(simple_print::green, simple_print::bar);
-        simple_print::print(simple_print::green, t->m_name, " PASSED");
+        simple_print::print(simple_print::green, t->m_suite, "::", t->m_name,
+            " PASSED");
       } else {
         num_failed++;
         simple_print::print(simple_print::red, simple_print::bar);
-        simple_print::print(simple_print::red, t->m_name, " FAILED");
+        simple_print::print(simple_print::red, t->m_suite, "::", t->m_name,
+            " FAILED");
       }
 
       current() = nullptr;
@@ -116,7 +129,7 @@ inline bool expect_comparison(
     const char* file, int line,
     const char* aexpr, const auto& a,
     const char* bexpr, const auto& b,
-    bool assertion,
+    bool assertion,  // assert or expect?
     auto opfunc, const char* opexpr) {
   bool passed = opfunc(a, b);
   auto color = passed ? simple_print::green : assertion ? simple_print::red : simple_print::yellow;
@@ -225,7 +238,7 @@ using simple_test::operator ""_op_tag;
 #define TEST(suite, name, ...) \
     void _test__##suite##__##name##__func(); \
     simple_test::TestCase _test__##suite##__##name##__var( \
-        #suite "::" #name, \
+        #suite, #name, \
         _test__##suite##__##name##__func ,##__VA_ARGS__); \
     void _test__##suite##__##name##__func() /* test body goes here */
 
@@ -286,3 +299,5 @@ using simple_test::operator ""_op_tag;
 
 #define ASSERT_NEAR(a, b, eps) ASSERT_FLOATCMP(a, ==, b, eps)
 #define EXPECT_NEAR(a, b, eps) EXPECT_FLOATCMP(a, ==, b, eps)
+
+#define FAIL() ASSERTION_FAULT()

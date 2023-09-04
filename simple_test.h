@@ -66,6 +66,10 @@ struct TestCase {
     }
   }
 
+  friend std::ostream& operator << (std::ostream& ost, TestCase const& t) {
+    return ost << t.m_suite << "." << t.m_name;
+  }
+
   static bool run_all() {
     int num_skipped = 0, num_passed = 0, num_failed = 0;
     for (TestCase* t = first(); t; t = t->m_next) {
@@ -76,8 +80,8 @@ struct TestCase {
 
       current() = t;
 
-      simple_print::print(simple_print::blue, t->m_suite, "::", t->m_name,
-          " running...");
+      t->m_called = true;
+      simple_print::print(simple_print::blue, *t," running...");
       simple_print::print(simple_print::blue, simple_print::bar);
       try {
         t->m_passed = true;  // could be reset in the func
@@ -86,24 +90,20 @@ struct TestCase {
         t->m_passed = false;
       } catch (const std::exception& e) {
         t->m_passed = false;
-        simple_print::print(simple_print::red, t->m_suite, "::", t->m_name,
-            " raised an exception ", e.what());
+        simple_print::print(simple_print::red, *t," raised an exception ", e.what());
       } catch (...) {
         t->m_passed = false;
-        simple_print::print(simple_print::red, t->m_suite, "::", t->m_name,
-            " raised an exception");
+        simple_print::print(simple_print::red, *t, " raised an exception");
       }
 
       if (t->m_passed) {
         num_passed++;
         simple_print::print(simple_print::green, simple_print::bar);
-        simple_print::print(simple_print::green, t->m_suite, "::", t->m_name,
-            " PASSED");
+        simple_print::print(simple_print::green, *t," PASSED");
       } else {
         num_failed++;
         simple_print::print(simple_print::red, simple_print::bar);
-        simple_print::print(simple_print::red, t->m_suite, "::", t->m_name,
-            " FAILED");
+        simple_print::print(simple_print::red, *t," FAILED");
       }
 
       current() = nullptr;
@@ -111,8 +111,18 @@ struct TestCase {
     }
 
     simple_print::print(simple_print::normal, simple_print::barbar);
-    if (num_passed)  simple_print::print(simple_print::green,  "passed:  ", num_passed);
-    if (num_failed)  simple_print::print(simple_print::red,    "failed:  ", num_failed);
+    if (num_passed) {
+      simple_print::print(simple_print::green,  "passed:  ", num_passed);
+    }
+    if (num_failed) {
+      simple_print::print(simple_print::red,    "failed:  ", num_failed);
+      for (TestCase* t = first(); t; t = t->m_next) {
+        if (t->m_called && !t->m_passed) {
+          simple_print::print(simple_print::red, " * ", *t);
+        }
+      }
+    }
+
     if (num_skipped) simple_print::print(simple_print::blue,   "skipped: ", num_skipped);
 
     return !num_failed;

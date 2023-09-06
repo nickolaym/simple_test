@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include <cxxabi.h>
+
 TEST(simple_test, vector_capacity) {
   std::vector<int> xs;
   xs.reserve(100500);
@@ -117,6 +119,10 @@ TEST(gtest_like, variety) {
   EXPECT_TRUE(1 == 1);
   EXPECT_FALSE(1 == 2);
   EXPECT_NEAR(123.4, 123.5, 0.1);
+}
+
+TEST(pretty_print, strings) {
+  EXPECT_EQ("aaa\x11", "aaa\x12") << simple_print::verbose("bbb\x13");
 }
 
 TESTING_MAIN()

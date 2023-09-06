@@ -2,7 +2,12 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <iomanip>
 #include <exception>
+
+
+#define OUTPUT_STREAM() std::cerr
+
 
 #define FORWARD(x) std::forward<decltype(x)>(x)
 
@@ -23,20 +28,63 @@ struct colored_cout_line {
   }
 
   explicit colored_cout_line(const char* color) {
-    if (is_colored()) std::cout << color;
+    if (is_colored()) OUTPUT_STREAM() << color;
   }
   colored_cout_line(colored_cout_line const&) = delete;
   ~colored_cout_line() {
-    if (is_colored()) std::cout << normal;
-    std::cout << std::endl;
+    if (is_colored()) OUTPUT_STREAM() << normal;
+    OUTPUT_STREAM() << std::endl;
   }
 
-  std::ostream& ost() const { return std::cout; }
+  std::ostream& ost() const { return OUTPUT_STREAM(); }
 };
 
 inline void print(const char* color, auto&& ... args) {
   (colored_cout_line(color).ost() << ... << FORWARD(args));
 }
+
+inline void verbose_print_string(std::ostream& ost, const char* s, size_t n) {
+  auto flags = ost.flags();
+  ost << "\"";
+  for ( ; n; ++s, --n) {
+    char c = *s;
+    if (c == '\n') ost << "\\n";
+    else if (c == '\r') ost << "\\r";
+    else if (c == '\t') ost << "\\t";
+    else if (c >= 0 && c < 32) ost << "\\x" << std::hex << std::setw(2) << std::setfill('0') << +c;
+    else ost << c;
+  }
+  ost << "\"";
+  ost.flags(flags);
+}
+inline void verbose_print_string(std::ostream& ost, const std::string& arg) {
+  verbose_print_string(ost, arg.c_str(), arg.size());
+}
+inline void verbose_print_string(std::ostream& ost, const char* arg) {
+  verbose_print_string(ost, arg, strlen(arg));
+}
+
+void verbose_print(std::ostream& ost, const auto& arg) {
+  using T = std::decay_t<decltype((arg))>;
+  if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, const char*> || std::is_same_v<T, char*>) {
+    verbose_print_string(ost, arg);
+  } else if constexpr (std::is_same_v<T, bool>) {
+    ost << std::boolalpha << arg;
+  } else if constexpr (requires { ost << arg; }) {
+    ost << arg;
+  } else {
+    ost << typeid(T).name() << " [" << sizeof(T) << " bytes] @ " << &arg;
+  }
+}
+
+template<class T> struct verbose {
+  const T& arg; verbose(const T& a) : arg(a) {}
+  friend std::ostream& operator << (std::ostream& ost, const verbose& v) {
+    verbose_print(ost, v.arg);
+    return ost;
+  }
+};
+template<class T> verbose(T) -> verbose<T>;
 
 }  // namespace simple_print
 
@@ -166,8 +214,8 @@ inline bool expect_comparison(
   const char* verdict = passed ? "passed" : "failed";
   simple_print::print(color, file, ":", line);
   simple_print::print(color, "  ", category, " ", verdict, ": ", aexpr, " ", opexpr, " ", bexpr);
-  simple_print::print(color, "    left : ", std::boolalpha, a);
-  simple_print::print(color, "    right: ", std::boolalpha, b);
+  simple_print::print(color, "    left : ", simple_print::verbose(a));
+  simple_print::print(color, "    right: ", simple_print::verbose(b));
   simple_print::print(color);
   return passed;
 }

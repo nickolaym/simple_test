@@ -242,13 +242,22 @@ inline int testing_main(int argc, char** argv) {
 
 // comparisons
 
-template<char... cs> struct op_tag_type {};
+template<std::size_t N> struct compile_time_str {
+    char buf[N] {};
+    constexpr compile_time_str(const char(&b)[N]) {
+        for (std::size_t i = 0; i != N; ++i) buf[i] = b[i];
+    }
+};
+template<std::size_t N> compile_time_str(const char(&)[N]) -> compile_time_str<N>;
 
-template<class C, C... cs> constexpr op_tag_type<cs...> operator ""_op_tag() { return {}; }
+template<compile_time_str s> struct str_tag {};
 
-template<class TAG> struct tagged_cmp;
+// decorated name because it will be used outside the namespace
+#define STR_TAG(op) ::simple_test::str_tag<#op>
 
-#define TAGGED_CMP(op) tagged_cmp<decltype(#op ## _op_tag)>
+template<class Tag> struct tagged_cmp;
+
+#define TAGGED_CMP(op) tagged_cmp<STR_TAG(op)>
 
 #define DECLARE_TAGGED_CMP(op) \
 template<> struct TAGGED_CMP(op) { \
@@ -262,13 +271,13 @@ DECLARE_TAGGED_CMP(>)
 DECLARE_TAGGED_CMP(<=)
 DECLARE_TAGGED_CMP(>=)
 
-template<class TAG> struct tagged_strcmp {
+template<class Tag> struct tagged_strcmp {
   constexpr auto operator()(const auto& a, const auto& b) const {
-    return tagged_cmp<TAG>()(strcmp(a, b), 0);
+    return tagged_cmp<Tag>()(strcmp(a, b), 0);
   }
 };
 
-#define TAGGED_STRCMP(op) tagged_strcmp<decltype(#op ## _op_tag)>
+#define TAGGED_STRCMP(op) tagged_strcmp<STR_TAG(op)>
 
 // float comparison
 
@@ -313,8 +322,6 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
 #define TAGGED_FLOATCMP(op, eps) tagged_floatcmp<decltype(#op ## _op_tag), decltype(eps)>{eps}
 
 }  // namespace simple_test
-
-using simple_test::operator ""_op_tag;
 
 #define TEST(suite, name, ...) \
     void _test__##suite##__##name##__func(); \

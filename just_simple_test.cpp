@@ -5,7 +5,7 @@
 
 #include <cxxabi.h>
 
-TEST(simple_test, vector_capacity) {
+TEST(should_fail, vector_capacity) {
   std::vector<int> xs;
   xs.reserve(100500);
   xs.clear();
@@ -13,7 +13,7 @@ TEST(simple_test, vector_capacity) {
   ASSERT_CMP(xs.size(), ==, 1) << " ahaha ? ahaha!";
 }
 
-TEST(simple_test, lots_of_failed_expectations) {
+TEST(should_fail, lots_of_failed_expectations) {
   EXPECT_CMP(123, ==, 456);
   EXPECT_BOOL(true, false);
   EXPECT_STRCMP("hello", >, "world");
@@ -21,26 +21,26 @@ TEST(simple_test, lots_of_failed_expectations) {
   std::cout << "some went wrong (or not...)" << std::endl;
 }
 
-TEST(simple_test, some_assertion_failed) {
+TEST(should_fail, some_assertion_failed) {
   ASSERT_CMP(123, ==, 456);
   assert(false);  // unreachable
 }
 
-TEST(simple_test, raised_exception) {
+TEST(should_fail, raised_exception) {
   throw std::runtime_error("ooo");
   assert(false);  // unreachable
 }
 
-TEST(simple_test, some_disabled, false) {
+TEST(MUST_SKIP, some_disabled, false) {
   assert(false);  // unreachable
 }
 
-TEST(simple_test, some_fault_1) {
+TEST(should_fail, some_fault_1) {
   ASSERTION_FAULT() << "comment " << 123 << " goes here";
   assert(false);  // unreachable
 }
 
-TEST(simple_test, some_fault_2) {
+TEST(should_fail, some_fault_2) {
   ASSERTION_FAULT();
   assert(false);  // unreachable
 }
@@ -121,28 +121,28 @@ TEST(gtest_like, variety) {
   EXPECT_NEAR(123.4, 123.5, 0.1);
 }
 
-TEST(pretty_print, strings) {
+TEST(should_fail, strings) {
   EXPECT_EQ("aaa\x11", "aaa\x12") << simple_print::verbose("bbb\x13");
 }
 
 SHOW_GREEN_ASSERTIONS(true);  // global flag
 TEST(green, visible_1) {
-  EXPECT_TRUE("You must see this");
+  EXPECT_TRUE("You must see this") << "and this";
 }
 TEST(green, visible_2) {
-  EXPECT_TRUE("You must see this");
+  EXPECT_TRUE("You must see this") << "and this";
 }
 SHOW_GREEN_ASSERTIONS(false);  // global flag
 TEST(green, invisible_3) {
-  EXPECT_TRUE("You must NOT see this");
+  EXPECT_TRUE("You must NOT see this") << "nor this";
   SHOW_GREEN_ASSERTIONS(true);
-  EXPECT_TRUE("You must see this");
+  EXPECT_TRUE("You must see this") << "and this";
   SHOW_GREEN_ASSERTIONS(false);
-  EXPECT_TRUE("You must NOT see this");
+  EXPECT_TRUE("You must NOT see this") << "nor this";
   SHOW_GREEN_ASSERTIONS(true);  // local flag is ignored outside the test
 }
 TEST(green, invisible_4) {
-  EXPECT_TRUE("You must NOT see this");
+  EXPECT_TRUE("You must NOT see this") << "nor this";
 }
 
 

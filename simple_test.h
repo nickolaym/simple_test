@@ -211,10 +211,17 @@ inline void test_failed(bool assertion) {
   if (assertion) throw assertion_fault{};
 }
 
-struct make_test_failed {
+struct examination_afterword {
+  bool passed;
   bool assertion;
-  void operator <<= (auto&& _) && { test_failed(assertion); }
+  void operator <<= (auto&& _) && {
+    if (!passed) test_failed(assertion);
+  }
 };
+
+inline constexpr auto get_color(bool passed, bool assertion) {
+  return passed ? simple_print::green : assertion ? simple_print::red : simple_print::yellow;
+}
 
 // testing functions
 inline bool expect_comparison(
@@ -226,7 +233,7 @@ inline bool expect_comparison(
   bool passed = opfunc(a, b);
   if (passed && !show_green_assertions()) return true;
 
-  auto color = passed ? simple_print::green : assertion ? simple_print::red : simple_print::yellow;
+  auto color = get_color(passed, assertion);
   const char* category = assertion ? "assertion" : "expectation";
   const char* verdict = passed ? "passed" : "failed";
   simple_print::colored_cout_line(color) << file << ":" << line;
@@ -337,13 +344,15 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
         _test__##suite##__##name##__func ,##__VA_ARGS__); \
     void _test__##suite##__##name##__func() /* test body goes here */
 
-#define FAILURE_SUFFIX(assertion) \
-    simple_test::make_test_failed{assertion} <<= \
-    simple_print::colored_cout_line(assertion ? simple_print::red : simple_print::yellow).ost()
+#define EXAMINATION_SUFFIX(passed, assertion) \
+    simple_test::examination_afterword{passed, assertion} <<= \
+      simple_print::colored_cout_line(simple_test::get_color(passed, assertion)).ost()
 
 #define EXAMINE_IMPL(ae, a, be, b, assertion, ...) \
-    if (simple_test::expect_comparison(__FILE__, __LINE__, ae, a, be, b, assertion, ##__VA_ARGS__)) ; \
-    else FAILURE_SUFFIX(assertion)
+    if (const bool passed = \
+        simple_test::expect_comparison(__FILE__, __LINE__, ae, a, be, b, assertion, ##__VA_ARGS__); \
+        passed && !simple_test::show_green_assertions()) ; \
+    else EXAMINATION_SUFFIX(passed, assertion)
 #define EXAMINE(a, b, assertion, ...) \
     EXAMINE_IMPL(#a, a, #b, b, assertion, ##__VA_ARGS__)
 
@@ -369,7 +378,7 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
 
 #define ASSERTION_FAULT(...) \
     if (simple_test::examine_fault(__FILE__, __LINE__, ##__VA_ARGS__)) ; \
-    else FAILURE_SUFFIX(true)
+    else EXAMINATION_SUFFIX(false, true)
 
 #define TESTING_MAIN() \
     int main(int argc, char** argv) { return simple_test::testing_main(argc, argv); }

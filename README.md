@@ -80,6 +80,20 @@ ASSERTION_FAULT(common, C++, stream, args);
 
 Note that if the assertion passes, nothing will evaluate.
 
+### Show green assertions
+
+```
+SHOW_GREEN_ASSERTIONS(flag)
+```
+where `flag` is boolean
+
+If true, all positive assertions will print their values, too.
+
+(TODO: print trailing messages).
+
+See examples in just_simple_test.cpp
+
+
 ### TESTING_MAIN
 Just implementation of `int main()`
 
@@ -95,4 +109,3 @@ int main(int argc, char** argv) {
 
 ### TODO:
 - test throwing / nothrowing exceptions
-- printing nonprintable values using some stubs

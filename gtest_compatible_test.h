@@ -90,3 +90,7 @@ TEST(simple_test, compare_floats_implicitly) {
   EXPECT_NEAR(pivot, pivot - epsilon, epsilon);
   EXPECT_NEAR(pivot, pivot + epsilon, epsilon);
 }
+
+TEST(simple_test, compare_types) {
+  EXPECT_EQ(typeid(int), typeid(char)) << "intentionally wrong condition";
+}

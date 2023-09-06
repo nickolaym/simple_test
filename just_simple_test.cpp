@@ -125,4 +125,26 @@ TEST(pretty_print, strings) {
   EXPECT_EQ("aaa\x11", "aaa\x12") << simple_print::verbose("bbb\x13");
 }
 
+SHOW_GREEN_ASSERTIONS(true);  // global flag
+TEST(green, visible_1) {
+  EXPECT_TRUE("You must see this");
+}
+TEST(green, visible_2) {
+  EXPECT_TRUE("You must see this");
+}
+SHOW_GREEN_ASSERTIONS(false);  // global flag
+TEST(green, invisible_3) {
+  EXPECT_TRUE("You must NOT see this");
+  SHOW_GREEN_ASSERTIONS(true);
+  EXPECT_TRUE("You must see this");
+  SHOW_GREEN_ASSERTIONS(false);
+  EXPECT_TRUE("You must NOT see this");
+  SHOW_GREEN_ASSERTIONS(true);  // local flag is ignored outside the test
+}
+TEST(green, invisible_4) {
+  EXPECT_TRUE("You must NOT see this");
+}
+
+
+
 TESTING_MAIN()

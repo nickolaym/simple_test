@@ -8,7 +8,6 @@
 
 // some tests interact with std::cout, so let's use separate stream
 #define OUTPUT_STREAM() std::cerr
-#define SHOW_GREEN_ASSERTIONS() false
 
 namespace simple_print {
 
@@ -92,8 +91,10 @@ inline bool& show_green_assertions() {
   static bool flag = false;
   return flag;
 }
-inline void show_green_assertions(bool flag) {
+inline bool show_green_assertions(bool flag) {
+  bool old_flag = show_green_assertions();
   show_green_assertions() = flag;
+  return old_flag;
 }
 
 struct assertion_fault {};  // out of std::exception hierarchy
@@ -111,6 +112,9 @@ struct TestCase {
   void (*m_func)();
   bool m_enabled;
 
+  // preset
+  bool m_show_green_assertions = false;
+
   // result
   bool m_called = false;
   bool m_passed = false;
@@ -126,6 +130,7 @@ struct TestCase {
     , m_name(name)
     , m_func(func)
     , m_enabled(enabled && !is_name_disabled(suite) && !is_name_disabled(name))
+    , m_show_green_assertions(show_green_assertions())
   {
     if (first()) {
       last() = last()->m_next = this;
@@ -147,6 +152,7 @@ struct TestCase {
       }
 
       current() = t;
+      bool old_green_assertions = show_green_assertions(t->m_show_green_assertions);
 
       t->m_called = true;
       simple_print::colored_cout_line(simple_print::blue) << *t << " running...";
@@ -174,6 +180,7 @@ struct TestCase {
         simple_print::colored_cout_line(simple_print::red) << *t << " FAILED";
       }
 
+      show_green_assertions(old_green_assertions);
       current() = nullptr;
       simple_print::colored_cout_line(simple_print::normal) << "";
     }
@@ -366,6 +373,12 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
 
 #define TESTING_MAIN() \
     int main(int argc, char** argv) { return simple_test::testing_main(argc, argv); }
+
+#define SIMPLE_TEST_PPCAT1(a, b) a ## b
+#define SIMPLE_TEST_PPCAT(a, b) SIMPLE_TEST_PPCAT1(a, b)
+#define SHOW_GREEN_ASSERTIONS(flag) \
+    [[maybe_unused]] bool SIMPLE_TEST_PPCAT(_green_assertions_, __COUNTER__) = \
+        simple_test::show_green_assertions(flag)
 
 // GTest-like comparisons
 

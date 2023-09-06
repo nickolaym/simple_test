@@ -6,10 +6,9 @@
 #include <exception>
 
 
+// some tests interact with std::cout, so let's use separate stream
 #define OUTPUT_STREAM() std::cerr
-
-
-#define FORWARD(x) std::forward<decltype(x)>(x)
+#define SHOW_GREEN_ASSERTIONS() false
 
 namespace simple_print {
 
@@ -37,11 +36,8 @@ struct colored_cout_line {
   }
 
   std::ostream& ost() const { return OUTPUT_STREAM(); }
+  std::ostream& operator << (const auto& arg) { return ost() << arg; }
 };
-
-inline void print(const char* color, auto&& ... args) {
-  (colored_cout_line(color).ost() << ... << FORWARD(args));
-}
 
 inline void verbose_print_string(std::ostream& ost, const char* s, size_t n) {
   auto flags = ost.flags();
@@ -72,6 +68,8 @@ void verbose_print(std::ostream& ost, const auto& arg) {
     ost << std::boolalpha << arg;
   } else if constexpr (requires { ost << arg; }) {
     ost << arg;
+  } else if constexpr (std::is_same_v<T, std::type_info>) {
+    ost << "typeid name = " << arg.name();
   } else {
     ost << typeid(T).name() << " [" << sizeof(T) << " bytes] @ " << &arg;
   }
@@ -89,6 +87,14 @@ template<class T> verbose(T) -> verbose<T>;
 }  // namespace simple_print
 
 namespace simple_test {
+
+inline bool& show_green_assertions() {
+  static bool flag = false;
+  return flag;
+}
+inline void show_green_assertions(bool flag) {
+  show_green_assertions() = flag;
+}
 
 struct assertion_fault {};  // out of std::exception hierarchy
 
@@ -143,8 +149,8 @@ struct TestCase {
       current() = t;
 
       t->m_called = true;
-      simple_print::print(simple_print::blue, *t," running...");
-      simple_print::print(simple_print::blue, simple_print::bar);
+      simple_print::colored_cout_line(simple_print::blue) << *t << " running...";
+      simple_print::colored_cout_line(simple_print::blue) << simple_print::bar;
       try {
         t->m_passed = true;  // could be reset in the func
         t->m_func();
@@ -152,40 +158,42 @@ struct TestCase {
         t->m_passed = false;
       } catch (const std::exception& e) {
         t->m_passed = false;
-        simple_print::print(simple_print::red, *t," raised an exception ", e.what());
+        simple_print::colored_cout_line(simple_print::red) << *t << " raised " << e.what();
       } catch (...) {
         t->m_passed = false;
-        simple_print::print(simple_print::red, *t, " raised an exception");
+        simple_print::colored_cout_line(simple_print::red) << *t <<  " raised an exception";
       }
 
       if (t->m_passed) {
         num_passed++;
-        simple_print::print(simple_print::green, simple_print::bar);
-        simple_print::print(simple_print::green, *t," PASSED");
+        simple_print::colored_cout_line(simple_print::green) << simple_print::bar;
+        simple_print::colored_cout_line(simple_print::green) << *t << " PASSED";
       } else {
         num_failed++;
-        simple_print::print(simple_print::red, simple_print::bar);
-        simple_print::print(simple_print::red, *t," FAILED");
+        simple_print::colored_cout_line(simple_print::red) << simple_print::bar;
+        simple_print::colored_cout_line(simple_print::red) << *t << " FAILED";
       }
 
       current() = nullptr;
-      simple_print::print(simple_print::normal, "");
+      simple_print::colored_cout_line(simple_print::normal) << "";
     }
 
-    simple_print::print(simple_print::normal, simple_print::barbar);
+    simple_print::colored_cout_line(simple_print::normal) << simple_print::barbar;
     if (num_passed) {
-      simple_print::print(simple_print::green,  "passed:  ", num_passed);
+      simple_print::colored_cout_line(simple_print::green) << "passed:  " << num_passed;
     }
     if (num_failed) {
-      simple_print::print(simple_print::red,    "failed:  ", num_failed);
+      simple_print::colored_cout_line(simple_print::red) << "failed:  " << num_failed;
       for (TestCase* t = first(); t; t = t->m_next) {
         if (t->m_called && !t->m_passed) {
-          simple_print::print(simple_print::red, " * ", *t);
+          simple_print::colored_cout_line(simple_print::red) << " * " << *t;
         }
       }
     }
 
-    if (num_skipped) simple_print::print(simple_print::blue,   "skipped: ", num_skipped);
+    if (num_skipped) {
+      simple_print::colored_cout_line(simple_print::blue) << "skipped: " << num_skipped;
+    }
 
     return !num_failed;
   }
@@ -209,23 +217,22 @@ inline bool expect_comparison(
     bool assertion,  // assert or expect?
     auto opfunc, const char* opexpr) {
   bool passed = opfunc(a, b);
+  if (passed && !show_green_assertions()) return true;
+
   auto color = passed ? simple_print::green : assertion ? simple_print::red : simple_print::yellow;
   const char* category = assertion ? "assertion" : "expectation";
   const char* verdict = passed ? "passed" : "failed";
-  simple_print::print(color, file, ":", line);
-  simple_print::print(color, "  ", category, " ", verdict, ": ", aexpr, " ", opexpr, " ", bexpr);
-  simple_print::print(color, "    left : ", simple_print::verbose(a));
-  simple_print::print(color, "    right: ", simple_print::verbose(b));
-  simple_print::print(color);
+  simple_print::colored_cout_line(color) << file << ":" << line;
+  simple_print::colored_cout_line(color) << "  " << category << " " << verdict
+      << ": " << aexpr << " " << opexpr << " " << bexpr;
+  simple_print::colored_cout_line(color) << "    left : " << simple_print::verbose(a);
+  simple_print::colored_cout_line(color) << "    right: " << simple_print::verbose(b);
   return passed;
 }
 
-inline bool examine_fault(const char* file, int line, auto&& ... comments) {
-  simple_print::print(simple_print::red, file, ":", line);
-  simple_print::print(simple_print::red, "  explicitly failed");
-  if constexpr (sizeof...(comments) > 0) {
-    simple_print::print(simple_print::red, "    ", FORWARD(comments)...);
-  }
+inline bool examine_fault(const char* file, int line) {
+  simple_print::colored_cout_line(simple_print::red) << file << ":" << line;
+  simple_print::colored_cout_line(simple_print::red) << "  explicitly failed";
   return false;
 }
 

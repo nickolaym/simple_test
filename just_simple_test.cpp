@@ -41,7 +41,7 @@ TEST(simple_test, some_fault_1) {
 }
 
 TEST(simple_test, some_fault_2) {
-  ASSERTION_FAULT("comment ", 123, " goes here");
+  ASSERTION_FAULT();
   assert(false);  // unreachable
 }
 

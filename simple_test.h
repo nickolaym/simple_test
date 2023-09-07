@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include <exception>
-
+#include <cstring>
 
 // some tests interact with std::cout, so let's use separate stream
 #define OUTPUT_STREAM() std::cerr
@@ -287,7 +287,7 @@ DECLARE_TAGGED_CMP(>=)
 
 template<class Tag> struct tagged_strcmp {
   constexpr auto operator()(const auto& a, const auto& b) const {
-    return tagged_cmp<Tag>()(strcmp(a, b), 0);
+    return tagged_cmp<Tag>()(std::strcmp(a, b), 0);
   }
 };
 

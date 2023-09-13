@@ -1,5 +1,9 @@
 #pragma once
 
+// Author: Nikolay Merkin <merkin@mail.ru> <nickolay.merkin@gmail.com>
+// https://github.com/cpp-practice/simple-test
+// https://github.com/nickolaym/simple_test
+
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>

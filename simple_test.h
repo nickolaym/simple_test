@@ -218,7 +218,7 @@ inline void test_failed(bool assertion) {
 struct examination_afterword {
   bool passed;
   bool assertion;
-  void operator <<= (auto&& _) && {
+  void operator <<= (auto&&) && {
     if (!passed) test_failed(assertion);
   }
 };
@@ -254,7 +254,7 @@ inline bool examine_fault(const char* file, int line) {
   return false;
 }
 
-inline int testing_main(int argc, char** argv) {
+inline int testing_main(int /* argc */, char** /* argv */) {
   return !simple_test::TestCase::run_all();
 }
 

@@ -107,5 +107,23 @@ int main(int argc, char** argv) {
 }
 ```
 
+#### Arguments
+
+```
+your_test_application [-h] [--help] [-l] [--list] {patterns}
+```
+
+* -h | --help - print help
+* -l | --list - print list of matched tests, instead of run them
+* pattens are glob-like patterns to match to suite.test names
+
+If no patterns are specified, all tests match to run/list.
+
+Pattern syntax:
+* `?` for any single char,
+* `*` for any substring,
+* `.` for separator between suite and name
+* other chars are a-z, A-Z, 0-9, _
+
 ### TODO:
 - test throwing / nothrowing exceptions

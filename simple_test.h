@@ -9,6 +9,9 @@
 #include <iomanip>
 #include <exception>
 #include <cstring>
+#include <regex>
+#include <string>
+#include <vector>
 
 // some tests interact with std::cout, so let's use separate stream
 #define OUTPUT_STREAM() std::cerr
@@ -147,9 +150,13 @@ struct TestCase {
     return ost << t.m_suite << "." << t.m_name;
   }
 
-  static bool run_all() {
+  static bool run_all(auto name_filter) {
     int num_skipped = 0, num_passed = 0, num_failed = 0;
     for (TestCase* t = first(); t; t = t->m_next) {
+      if (!name_filter(t->m_suite, t->m_name)) {
+        continue;
+      }
+
       if (!t->m_enabled) {
         num_skipped++;
         continue;
@@ -254,8 +261,90 @@ inline bool examine_fault(const char* file, int line) {
   return false;
 }
 
-inline int testing_main(int /* argc */, char** /* argv */) {
-  return !simple_test::TestCase::run_all();
+inline void show_help(const char* app) {
+  OUTPUT_STREAM()
+    << "Usage: " << app << " [-h|--help] [-l|--list] {patterns}" << std::endl
+    << "  -h | --help  - print help" << std::endl
+    << "  -l | --list  - print list of matched tests, instead of run them" << std::endl
+    << "  patterns     - names of tests to run (if not set, will run all)" << std::endl
+    << "  patterns are glob-like:" << std::endl
+    << "    ? for any single char," << std::endl
+    << "    * for any substring," << std::endl
+    << "    . is a suite.name separator" << std::endl
+    << "    valid chars are a-z, A-Z, 0-9, _" << std::endl
+    << std::endl;
+}
+
+inline void show_list(auto filter) {
+  for (TestCase* t = TestCase::first(); t; t = t->m_next) {
+    if (filter(t->m_suite, t->m_name)) {
+      OUTPUT_STREAM() << *t << std::endl;
+    }
+  }
+}
+
+inline std::regex glob_to_regex(const std::string_view& arg) {
+  std::string s;
+  for (char c : arg) {
+    switch (c) {
+      case '.':
+        s += "\\.";
+        break;
+      case '?':
+        s += ".?";
+        break;
+      case '*':
+        s += ".*";
+        break;
+      default:
+        s += c;
+        break;
+    }
+  }
+  return std::regex{s};
+}
+
+inline int testing_main(int argc, char** argv) {
+  std::vector<std::regex> patterns;
+
+  bool list = false;
+  for (int i = 1; i < argc; ++i) {
+    const char* arg = argv[i];
+    if (arg[0] == '-') {
+      if (strcmp(arg, "-h")==0 || strcmp(arg, "--help")==0) {
+        show_help(argv[0]);
+        return 0;
+      } else if (strcmp(arg, "-l")==0 || strcmp(arg, "--list")==0) {
+        list = true;
+      } else {
+        OUTPUT_STREAM() << "Unknown option " << arg << std::endl;
+        show_help(argv[0]);
+        return 1;
+      }
+    } else {
+      static const std::regex valid_pattern{"[0-9A-Za-z_.*?]*"};
+      if (!std::regex_match(arg, valid_pattern)) {
+        OUTPUT_STREAM() << "Invalid pattern " << arg << std::endl;
+      }
+      patterns.push_back(glob_to_regex(arg));
+    }
+  }
+
+  auto filter = [&patterns](const char* suite, const char* name) {
+    if (patterns.empty()) return true;
+    std::string testname = std::string(suite) + "." + name;
+    for (const auto& pattern : patterns) {
+      if (std::regex_match(testname, pattern)) return true;
+    }
+    return false;
+  };
+
+  if (list) {
+    show_list(filter);
+    return 0;
+  }
+
+  return !simple_test::TestCase::run_all(filter);
 }
 
 // comparisons

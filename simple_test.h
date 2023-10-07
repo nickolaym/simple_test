@@ -15,13 +15,13 @@
 
 namespace simple_print {
 
-static const char* bar = "-------------------";
-static const char* barbar = "===================";
-static const char* red = "\x1b[31m";
-static const char* green = "\x1b[32m";
-static const char* yellow = "\x1b[33m";
-static const char* blue = "\x1b[34m";
-static const char* normal = "\x1b[0m";
+static constexpr const char* bar = "-------------------";
+static constexpr const char* barbar = "===================";
+static constexpr const char* red = "\x1b[31m";
+static constexpr const char* green = "\x1b[32m";
+static constexpr const char* yellow = "\x1b[33m";
+static constexpr const char* blue = "\x1b[34m";
+static constexpr const char* normal = "\x1b[0m";
 
 struct colored_cout_line {
   static bool is_colored() {

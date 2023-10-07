@@ -5,3 +5,4 @@ CMakeFiles/**
 .cache/**
 build/**
 bin/**
+.DS_Store

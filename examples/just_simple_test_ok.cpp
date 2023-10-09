@@ -1,47 +1,7 @@
-#include "simple_test.h"
+#include "../simple_test.h"
 #include <cassert>
 
-#include <vector>
-
-#include <cxxabi.h>
-
-TEST(should_fail, vector_capacity) {
-  std::vector<int> xs;
-  xs.reserve(100500);
-  xs.clear();
-  EXPECT_CMP(xs.capacity(), ==, 0) << " ahaha ? ahaha!";
-  ASSERT_CMP(xs.size(), ==, 1) << " ahaha ? ahaha!";
-}
-
-TEST(should_fail, lots_of_failed_expectations) {
-  EXPECT_CMP(123, ==, 456);
-  EXPECT_BOOL(true, false);
-  EXPECT_STRCMP("hello", >, "world");
-  EXPECT_STRCMP("hello\0one", !=, "hello\0two");
-  std::cout << "some went wrong (or not...)" << std::endl;
-}
-
-TEST(should_fail, some_assertion_failed) {
-  ASSERT_CMP(123, ==, 456);
-  assert(false);  // unreachable
-}
-
-TEST(should_fail, raised_exception) {
-  throw std::runtime_error("ooo");
-  assert(false);  // unreachable
-}
-
 TEST(MUST_SKIP, some_disabled, false) {
-  assert(false);  // unreachable
-}
-
-TEST(should_fail, some_fault_1) {
-  ASSERTION_FAULT() << "comment " << 123 << " goes here";
-  assert(false);  // unreachable
-}
-
-TEST(should_fail, some_fault_2) {
-  ASSERTION_FAULT();
   assert(false);  // unreachable
 }
 
@@ -121,10 +81,6 @@ TEST(gtest_like, variety) {
   EXPECT_NEAR(123.4, 123.5, 0.1);
 }
 
-TEST(should_fail, strings) {
-  EXPECT_EQ("aaa\x11", "aaa\x12") << simple_print::verbose("bbb\x13");
-}
-
 SHOW_GREEN_ASSERTIONS(true);  // global flag
 TEST(green, visible_1) {
   EXPECT_TRUE("You must see this") << "and this";
@@ -144,7 +100,6 @@ TEST(green, invisible_3) {
 TEST(green, invisible_4) {
   EXPECT_TRUE("You must NOT see this") << "nor this";
 }
-
 
 
 TESTING_MAIN()

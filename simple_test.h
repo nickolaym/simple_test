@@ -88,7 +88,7 @@ template<class T> struct verbose {
     return ost;
   }
 };
-template<class T> verbose(T) -> verbose<T>;
+template<class T> verbose(const T&) -> verbose<T>;
 
 }  // namespace simple_print
 

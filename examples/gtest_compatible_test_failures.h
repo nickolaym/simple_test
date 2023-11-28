@@ -78,3 +78,65 @@ TEST(simple_test, compare_types_failed) {
 
   END_REACHABLE_CODE();
 }
+
+TEST(simple_test, throw) {
+  BEGIN_REACHABLE_CODE();
+  EXPECT_THROW(throw std::out_of_range("ahaha"), std::runtime_error);
+  END_REACHABLE_CODE();
+
+  ASSERT_THROW(throw std::out_of_range("ahaha"), std::runtime_error);
+  UNREACHABLE_CODE();
+}
+
+TEST(simple_test, any_throw) {
+  BEGIN_REACHABLE_CODE();
+  EXPECT_ANY_THROW({});
+  END_REACHABLE_CODE();
+
+  ASSERT_ANY_THROW({});
+  UNREACHABLE_CODE();
+}
+
+TEST(simple_test, no_throw) {
+  BEGIN_REACHABLE_CODE();
+  EXPECT_NO_THROW(throw std::out_of_range("ahaha"));
+  END_REACHABLE_CODE();
+
+  ASSERT_NO_THROW(throw std::out_of_range("ahaha"));
+}
+
+TEST(simple_test, throw_when_fail) {
+  auto minor_failure = [](){ ADD_FAILURE() << "ahaha"; };
+  auto critical_failure = [](){ FAIL() << "ohoho"; };
+
+  BEGIN_REACHABLE_CODE();
+  EXPECT_THROW(minor_failure(), std::exception);
+  END_REACHABLE_CODE();
+
+  EXPECT_THROW(critical_failure(), std::exception);
+  UNREACHABLE_CODE();
+}
+
+TEST(simple_test, any_throw_when_fail) {
+  auto minor_failure = [](){ ADD_FAILURE() << "ahaha"; };
+  auto critical_failure = [](){ FAIL() << "ohoho"; };
+
+  BEGIN_REACHABLE_CODE();
+  EXPECT_ANY_THROW(minor_failure());
+  END_REACHABLE_CODE();
+
+  EXPECT_ANY_THROW(critical_failure());
+  UNREACHABLE_CODE();
+}
+
+TEST(simple_test, no_throw_when_fail) {
+  auto minor_failure = [](){ ADD_FAILURE() << "ahaha"; };
+  auto critical_failure = [](){ FAIL() << "ohoho"; };
+
+  BEGIN_REACHABLE_CODE();
+  EXPECT_NO_THROW(minor_failure());
+  END_REACHABLE_CODE();
+
+  EXPECT_NO_THROW(critical_failure());
+  UNREACHABLE_CODE();
+}

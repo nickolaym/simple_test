@@ -492,6 +492,35 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
 #define ASSERTION_FAULT()   EXAMINE_FAULT(true)
 #define EXPECTATION_FAULT() EXAMINE_FAULT(false)
 
+#define EXAMINE_THROW(statement, exception, assertion) \
+    try { \
+      statement; \
+      EXAMINE_FAULT(assertion) << "no exception was thrown"; \
+    } \
+    catch (simple_test::assertion_fault) { throw; } \
+    catch (exception) {} \
+    catch (...) { EXAMINE_FAULT(assertion) << "wrong exception was thrown"; } \
+    // end macro
+
+#define EXAMINE_ANY_THROW(statement, assertion) \
+    try { \
+      statement; \
+      EXAMINE_FAULT(assertion) << "no exception was thrown"; \
+    } \
+    catch (simple_test::assertion_fault) { throw; } \
+    catch (...) {} \
+    // end macro
+
+#define EXAMINE_NO_THROW(statement, assertion) \
+    try { \
+      statement; \
+    } \
+    catch (simple_test::assertion_fault) { throw; } \
+    catch (...) { EXAMINE_FAULT(assertion) << "some exception was thrown"; } \
+    // end macro
+
+////////////////////////////////////////////////////////////////////////////////
+
 #define TESTING_MAIN() \
     int main(int argc, char** argv) { return simple_test::testing_main(argc, argv); }
 
@@ -531,3 +560,12 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
 
 #define FAIL() ASSERTION_FAULT()
 #define ADD_FAILURE() EXPECTATION_FAULT()
+
+#define ASSERT_THROW(statement, exception) EXAMINE_THROW(statement, exception, true)
+#define EXPECT_THROW(statement, exception) EXAMINE_THROW(statement, exception, false)
+
+#define ASSERT_ANY_THROW(statement) EXAMINE_ANY_THROW(statement, true)
+#define EXPECT_ANY_THROW(statement) EXAMINE_ANY_THROW(statement, false)
+
+#define ASSERT_NO_THROW(statement) EXAMINE_NO_THROW(statement, true)
+#define EXPECT_NO_THROW(statement) EXAMINE_NO_THROW(statement, false)

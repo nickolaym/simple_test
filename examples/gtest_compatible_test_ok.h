@@ -70,3 +70,13 @@ TEST(simple_test, compare_floats_implicitly) {
 TEST(simple_test, compare_types) {
   EXPECT_EQ(typeid(int), typeid(int));
 }
+
+TEST(simple_test, exceptions) {
+  EXPECT_THROW(throw std::out_of_range("ahaha"), std::logic_error);
+  EXPECT_ANY_THROW(throw std::out_of_range("ahaha"));
+  EXPECT_NO_THROW({});
+
+  ASSERT_THROW(throw std::out_of_range("ahaha"), std::logic_error);
+  ASSERT_ANY_THROW(throw std::out_of_range("ahaha"));
+  ASSERT_NO_THROW({});
+}

@@ -39,6 +39,12 @@ TEST(should_fail, some_fault_2) {
   assert(false);  // unreachable
 }
 
+TEST(should_fail, some_fault_3) {
+  EXPECTATION_FAULT();
+  EXPECTATION_FAULT() << "hello";
+  std::cout << "here we are!" << std::endl;
+}
+
 TEST(should_fail, strings) {
   EXPECT_EQ("aaa\x11", "aaa\x12") << simple_print::verbose("bbb\x13");
 }

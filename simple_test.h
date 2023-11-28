@@ -255,9 +255,10 @@ inline bool expect_comparison(
   return passed;
 }
 
-inline bool examine_fault(const char* file, int line) {
-  simple_print::colored_cout_line(simple_print::red) << file << ":" << line;
-  simple_print::colored_cout_line(simple_print::red) << "  explicitly failed";
+inline bool examine_fault(const char* file, int line, bool assertion) {
+  auto color = get_color(false, assertion);
+  simple_print::colored_cout_line(color) << file << ":" << line;
+  simple_print::colored_cout_line(color) << "  explicitly failed";
   return false;
 }
 
@@ -484,9 +485,12 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
 #define ASSERT_FLOATCMP(a, op, b, eps) EXAMINE_FLOATCMP(a, op, b, eps, true)
 #define EXPECT_FLOATCMP(a, op, b, eps) EXAMINE_FLOATCMP(a, op, b, eps, false)
 
-#define ASSERTION_FAULT(...) \
-    if (simple_test::examine_fault(__FILE__, __LINE__, ##__VA_ARGS__)) ; \
-    else EXAMINATION_SUFFIX(false, true)
+#define EXAMINE_FAULT(assertion) \
+    if (simple_test::examine_fault(__FILE__, __LINE__, assertion)) ; \
+    else EXAMINATION_SUFFIX(false, assertion)
+
+#define ASSERTION_FAULT()   EXAMINE_FAULT(true)
+#define EXPECTATION_FAULT() EXAMINE_FAULT(false)
 
 #define TESTING_MAIN() \
     int main(int argc, char** argv) { return simple_test::testing_main(argc, argv); }
@@ -526,3 +530,4 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
 #define EXPECT_NEAR(a, b, eps) EXPECT_FLOATCMP(a, ==, b, eps)
 
 #define FAIL() ASSERTION_FAULT()
+#define ADD_FAILURE() EXPECTATION_FAULT()

@@ -371,12 +371,27 @@ template<> struct TAGGED_CMP(op) { \
   constexpr auto operator()(const auto& a, const auto& b) const { return a op b; } \
 };
 
+#if defined(__GNUC__) || defined(__clang__)
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wsign-compare"
+#elif defined(_MSC_VER)
+  #pragma warning(push)
+  #pragma warning(disable: 4388)
+  #pragma warning(disable: 4389)
+#endif
+
 DECLARE_TAGGED_CMP(==)
 DECLARE_TAGGED_CMP(!=)
 DECLARE_TAGGED_CMP(<)
 DECLARE_TAGGED_CMP(>)
 DECLARE_TAGGED_CMP(<=)
 DECLARE_TAGGED_CMP(>=)
+
+#if defined(__GNUC__) || defined(__clang__)
+  #pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+  #pragma warning(pop)
+#endif
 
 template<class Tag> struct tagged_strcmp {
   constexpr auto operator()(const auto& a, const auto& b) const {

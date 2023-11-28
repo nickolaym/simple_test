@@ -497,8 +497,8 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
       statement; \
       EXAMINE_FAULT(assertion) << "no exception was thrown"; \
     } \
-    catch (simple_test::assertion_fault) { throw; } \
-    catch (exception) {} \
+    catch (const simple_test::assertion_fault&) { throw; } \
+    catch (const exception&) {} \
     catch (...) { EXAMINE_FAULT(assertion) << "wrong exception was thrown"; } \
     // end macro
 
@@ -507,7 +507,7 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
       statement; \
       EXAMINE_FAULT(assertion) << "no exception was thrown"; \
     } \
-    catch (simple_test::assertion_fault) { throw; } \
+    catch (const simple_test::assertion_fault&) { throw; } \
     catch (...) {} \
     // end macro
 
@@ -515,7 +515,7 @@ template<class TAG, class EPS> struct tagged_floatcmp_factory {
     try { \
       statement; \
     } \
-    catch (simple_test::assertion_fault) { throw; } \
+    catch (const simple_test::assertion_fault&) { throw; } \
     catch (...) { EXAMINE_FAULT(assertion) << "some exception was thrown"; } \
     // end macro
 
